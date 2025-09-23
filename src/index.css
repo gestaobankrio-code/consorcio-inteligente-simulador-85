@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Simulador de Consórcio - Design System Profissional */
+
+@layer base {
+  :root {
+    /* Cores principais - Confiança financeira */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    /* Sistema de cards e popovers */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Cor primária - Azul profissional */
+    --primary: 220 95% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 220 95% 65%;
+    --primary-dark: 220 95% 45%;
+
+    /* Cor secundária - Azul mais claro */
+    --secondary: 220 85% 65%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 220 85% 75%;
+
+    /* Cor de sucesso - Verde para CTA importante */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 76% 46%;
+
+    /* Cores neutras */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Estados de erro */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Bordas e inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    /* Gradientes para impacto visual */
+    --gradient-primary: linear-gradient(135deg, hsl(220 95% 55%), hsl(220 85% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(220 95% 45%), hsl(220 95% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 95% 55%) 0%, hsl(220 95% 45%) 50%, hsl(220 85% 65%) 100%);
+    
+    /* Sombras elegantes */
+    --shadow-card: 0 4px 6px -1px hsl(220 95% 55% / 0.1), 0 2px 4px -1px hsl(220 95% 55% / 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(220 95% 55% / 0.1), 0 4px 6px -2px hsl(220 95% 55% / 0.05);
+    --shadow-glow: 0 0 30px hsl(220 95% 55% / 0.3);
+
+    /* Transições suaves */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 220 95% 65%;
+    --primary-foreground: 222 47% 11%;
+    --primary-light: 220 95% 75%;
+    --primary-dark: 220 95% 55%;
+
+    --secondary: 220 85% 75%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 220 85% 85%;
+
+    --success: 142 76% 46%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 76% 56%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 70%;
+
+    /* Gradientes ajustados para modo escuro */
+    --gradient-primary: linear-gradient(135deg, hsl(220 95% 65%), hsl(220 85% 75%));
+    --gradient-success: linear-gradient(135deg, hsl(220 95% 55%), hsl(220 95% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 95% 65%) 0%, hsl(220 95% 55%) 50%, hsl(220 85% 75%) 100%);
+    
+    /* Sombras ajustadas */
+    --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
+    --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 30px hsl(220 95% 65% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  /* Componentes personalizados do simulador */
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-bg {
+    background: var(--gradient-hero);
+  }
+
+  .card-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .card-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-success {
+    @apply bg-success hover:bg-success/90 text-success-foreground;
+    transition: var(--transition-smooth);
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .form-step {
+    @apply opacity-0 translate-y-4 transition-all duration-500 ease-out;
+  }
+
+  .form-step.active {
+    @apply opacity-100 translate-y-0;
+  }
+
+  /* Estilo para inputs com máscara */
+  .input-masked {
+    @apply border-2 border-input focus:border-primary focus:ring-2 focus:ring-primary/20;
+    transition: var(--transition-smooth);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--success) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--success) / 0.6);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
