@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LeadCaptureForm } from './LeadCaptureForm';
 import { SimulatorInterface } from './SimulatorInterface';
 import { ResultsChart } from './ResultsChart';
+import { BlurredResults } from './BlurredResults';
 
 export interface LeadData {
   name: string;
@@ -11,6 +12,7 @@ export interface LeadData {
   timeToAcquire: number;
   ownResources: number;
   leadScore: number;
+  leadId?: string;
 }
 
 export interface SimulationData {
@@ -35,10 +37,10 @@ export interface SimulationResult {
   savingsPercentage: number;
 }
 
-type Step = 'lead-capture' | 'simulator' | 'results';
+type Step = 'simulator' | 'blurred-results' | 'lead-capture' | 'results';
 
 export const ConsortiumSimulator = () => {
-  const [currentStep, setCurrentStep] = useState<Step>('lead-capture');
+  const [currentStep, setCurrentStep] = useState<Step>('simulator');
   const [leadData, setLeadData] = useState<LeadData | null>(null);
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
   const [results, setResults] = useState<SimulationResult | null>(null);
@@ -118,15 +120,19 @@ export const ConsortiumSimulator = () => {
     };
   };
 
-  const handleLeadSubmit = (data: LeadData) => {
-    setLeadData(data);
-    setCurrentStep('simulator');
-  };
-
   const handleSimulationSubmit = (data: SimulationData) => {
     setSimulationData(data);
     const calculatedResults = calculateResults(data);
     setResults(calculatedResults);
+    setCurrentStep('blurred-results');
+  };
+
+  const handleBlurredResultsComplete = () => {
+    setCurrentStep('lead-capture');
+  };
+
+  const handleLeadSubmit = (data: LeadData) => {
+    setLeadData(data);
     setCurrentStep('results');
   };
 
@@ -135,7 +141,7 @@ export const ConsortiumSimulator = () => {
   };
 
   const handleNewSimulation = () => {
-    setCurrentStep('lead-capture');
+    setCurrentStep('simulator');
     setLeadData(null);
     setSimulationData(null);
     setResults(null);
@@ -144,15 +150,21 @@ export const ConsortiumSimulator = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <div className="container mx-auto px-4 py-8">
-        {currentStep === 'lead-capture' && (
-          <LeadCaptureForm onSubmit={handleLeadSubmit} />
+        {currentStep === 'simulator' && (
+          <SimulatorInterface 
+            onSubmit={handleSimulationSubmit}
+          />
         )}
         
-        {currentStep === 'simulator' && leadData && (
-          <SimulatorInterface 
-            leadData={leadData}
-            onSubmit={handleSimulationSubmit}
-            onBack={() => setCurrentStep('lead-capture')}
+        {currentStep === 'blurred-results' && (
+          <BlurredResults onAnimationComplete={handleBlurredResultsComplete} />
+        )}
+        
+        {currentStep === 'lead-capture' && simulationData && results && (
+          <LeadCaptureForm 
+            onSubmit={handleLeadSubmit}
+            simulationData={simulationData}
+            results={results}
           />
         )}
         

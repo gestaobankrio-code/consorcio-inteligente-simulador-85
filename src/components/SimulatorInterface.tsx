@@ -5,21 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, Calculator, Car, Home, Truck, CheckCircle2 } from 'lucide-react';
-import { LeadData, SimulationData } from './ConsortiumSimulator';
+import { Calculator, Car, Home, Truck, CheckCircle2 } from 'lucide-react';
+import { SimulationData } from './ConsortiumSimulator';
 
 interface SimulatorInterfaceProps {
-  leadData: LeadData;
   onSubmit: (data: SimulationData) => void;
-  onBack: () => void;
 }
 
-export const SimulatorInterface = ({ leadData, onSubmit, onBack }: SimulatorInterfaceProps) => {
+export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
   const [simulationData, setSimulationData] = useState<SimulationData>({
     category: 'auto',
-    chartValue: leadData.chartValue,
-    ownResources: leadData.ownResources,
-    timeToAcquire: leadData.timeToAcquire
+    chartValue: 100000,
+    ownResources: 50000,
+    timeToAcquire: 24
   });
 
   const categories = [
@@ -64,10 +62,10 @@ export const SimulatorInterface = ({ leadData, onSubmit, onBack }: SimulatorInte
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">
-          Olá, {leadData.name.split(' ')[0]}! 👋
+          Simulador de Consórcio 🚀
         </h1>
         <p className="text-xl text-muted-foreground mb-6">
-          Vamos simular seu consórcio e descobrir <strong>quanto você pode economizar</strong>
+          Descubra <strong>quanto você pode economizar</strong> com consórcio
         </p>
         
         {/* Benefícios destacados */}
@@ -201,17 +199,7 @@ export const SimulatorInterface = ({ leadData, onSubmit, onBack }: SimulatorInte
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            className="flex items-center gap-2 w-full sm:w-auto"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Button>
-          
+        <div className="flex justify-center mt-8">
           <Button
             type="submit"
             variant="hero"
@@ -219,7 +207,7 @@ export const SimulatorInterface = ({ leadData, onSubmit, onBack }: SimulatorInte
             className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Calculator className="w-4 h-4" />
-            Calcular Economia
+            Simular Agora
           </Button>
         </div>
       </form>

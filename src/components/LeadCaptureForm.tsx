@@ -3,263 +3,221 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, ArrowRight, Calculator, TrendingUp, CreditCard, Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { LeadData } from './ConsortiumSimulator';
-import { useSimulatorConfig } from '@/hooks/useSimulatorConfig';
+import { ArrowRight, UserPlus, ShieldCheck } from 'lucide-react';
+import { LeadData, SimulationData, SimulationResult } from './ConsortiumSimulator';
+import { useLeads } from '@/hooks/useLeads';
+import { useSettings } from '@/hooks/useSettings';
+import { useToast } from '@/hooks/use-toast';
+import InputMask from 'react-input-mask';
 
 interface LeadCaptureFormProps {
   onSubmit: (data: LeadData) => void;
+  simulationData: SimulationData;
+  results: SimulationResult;
 }
 
-type FormStep = 'personal' | 'financial';
-
-export const LeadCaptureForm = ({ onSubmit }: LeadCaptureFormProps) => {
-  const { calculateLeadScore } = useSimulatorConfig();
+export const LeadCaptureForm = ({ onSubmit, simulationData, results }: LeadCaptureFormProps) => {
+  const { saveLead } = useLeads();
+  const { leadScoring } = useSettings();
+  const { toast } = useToast();
   
-  const [currentStep, setCurrentStep] = useState<FormStep>('personal');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    chartValue: 0,
-    timeToAcquire: 12,
-    ownResources: 0
+    phone: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Máscara para telefone
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 11) {
-      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1)$2-$3');
-    }
-    return value;
-  };
-
-  // Função para formatar valor em BRL
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const validateStep = (step: FormStep): boolean => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (step === 'personal') {
-      if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
-      if (!formData.email.trim()) newErrors.email = 'E-mail é obrigatório';
-      else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'E-mail inválido';
-      if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
-      else if (formData.phone.replace(/\D/g, '').length < 11) newErrors.phone = 'Telefone inválido';
-    }
-
-    if (step === 'financial') {
-      // Validação removida pois o chartValue não é mais coletado nesta etapa
-    }
+    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
+    if (!formData.email.trim()) newErrors.email = 'E-mail é obrigatório';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'E-mail inválido';
+    if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
+    else if (formData.phone.replace(/\D/g, '').length < 11) newErrors.phone = 'Telefone deve ter 11 dígitos';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      if (currentStep === 'personal') setCurrentStep('financial');
-      else handleSubmit();
-    }
+  const calculateLeadScore = () => {
+    let score = 0;
+    
+    if (simulationData.chartValue >= leadScoring.chartValue.min) score += leadScoring.chartValue.high;
+    else if (simulationData.chartValue >= leadScoring.chartValue.mid) score += leadScoring.chartValue.medium;
+    else if (simulationData.chartValue >= leadScoring.chartValue.low) score += leadScoring.chartValue.low_score;
+    
+    const resourcesPercentage = (simulationData.ownResources / simulationData.chartValue) * 100;
+    if (resourcesPercentage >= leadScoring.resources.high) score += leadScoring.resources.high_score;
+    else if (resourcesPercentage >= leadScoring.resources.medium) score += leadScoring.resources.medium_score;
+    
+    if (simulationData.timeToAcquire <= leadScoring.timeToAcquire.fast) score += leadScoring.timeToAcquire.fast_score;
+    else if (simulationData.timeToAcquire <= leadScoring.timeToAcquire.medium) score += leadScoring.timeToAcquire.medium_score;
+    
+    return score;
   };
 
-  const handleBack = () => {
-    if (currentStep === 'financial') setCurrentStep('personal');
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
 
-  const handleSubmit = () => {
-    if (validateStep('financial')) {
-      const leadScore = calculateLeadScore(formData);
-      const leadData: LeadData = {
-        ...formData,
-        leadScore
-      };
+    setIsSubmitting(true);
+
+    try {
+      const leadScore = calculateLeadScore();
       
-      // Aqui você pode adicionar a integração com RD Station
-      // fetch('sua-api-endpoint', { method: 'POST', body: JSON.stringify(leadData) })
-      
-      onSubmit(leadData);
+      // Save lead to Supabase
+      const leadData = await saveLead({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        category: simulationData.category,
+        chart_value: simulationData.chartValue,
+        time_to_acquire: simulationData.timeToAcquire,
+        own_resources: simulationData.ownResources,
+        lead_score: leadScore,
+        monthly_payment: results.consortium.monthlyPayment,
+        total_savings: results.savings,
+        savings_percentage: results.savingsPercentage
+      });
+
+      if (leadData) {
+        const leadDataWithScore: LeadData = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          chartValue: simulationData.chartValue,
+          timeToAcquire: simulationData.timeToAcquire,
+          ownResources: simulationData.ownResources,
+          leadScore
+        };
+
+        onSubmit({ ...leadDataWithScore, leadId: leadData.id });
+        
+        toast({
+          title: "Dados salvos com sucesso!",
+          description: "Agora você verá seus resultados detalhados.",
+        });
+      } else {
+        throw new Error('Erro ao salvar dados');
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao processar dados",
+        description: "Tente novamente em alguns momentos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const getProgressValue = () => {
-    if (currentStep === 'personal') return 50;
-    return 100;
-  };
-
-  const stepIcons = {
-    personal: <CreditCard className="w-5 h-5" />,
-    financial: <Calculator className="w-5 h-5" />
-  };
-
-  const stepTitles = {
-    personal: 'Dados Pessoais',
-    financial: 'Informações Financeiras'
   };
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">
-          Simulador de Consórcio
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          Quase pronto! 🎯
         </h1>
         <p className="text-xl text-muted-foreground mb-6">
-          Descubra como economizar com <strong>parcelas sem juros</strong> e <strong>valores reduzidos</strong>
+          Para ver seus resultados personalizados, precisamos de algumas informações
         </p>
+        
+        {/* Trust Indicators */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <div className="flex items-center bg-success/10 text-success px-4 py-2 rounded-full">
-            <span className="font-semibold">✓ Sem Juros</span>
+          <div className="flex items-center bg-success/10 text-success px-4 py-2 rounded-lg">
+            <ShieldCheck className="w-4 h-4 mr-2" />
+            <span className="font-semibold text-sm">Dados Protegidos</span>
           </div>
-          <div className="flex items-center bg-primary/10 text-primary px-4 py-2 rounded-full">
-            <span className="font-semibold">✓ Parcelas Reduzidas</span>
+          <div className="flex items-center bg-primary/10 text-primary px-4 py-2 rounded-lg">
+            <UserPlus className="w-4 h-4 mr-2" />
+            <span className="font-semibold text-sm">Sem Spam</span>
           </div>
         </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          {Object.entries(stepTitles).map(([key, title], index) => (
-            <div 
-              key={key}
-              className={`flex items-center gap-2 ${
-                currentStep === key ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              {stepIcons[key as FormStep]}
-              <span className="hidden md:block text-sm font-medium">{title}</span>
-            </div>
-          ))}
-        </div>
-        <Progress value={getProgressValue()} className="h-2" />
       </div>
 
       {/* Form */}
       <Card className="card-elevated animate-slide-up">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {stepIcons[currentStep]}
-            {stepTitles[currentStep]}
-          </CardTitle>
+          <CardTitle>Preencha seus dados de contato</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          
-          {/* Dados Pessoais */}
-          {currentStep === 'personal' && (
-            <div className="space-y-4 animate-fade-in">
-              <div>
-                <Label htmlFor="name">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className={errors.name ? 'border-destructive' : ''}
-                  placeholder="Digite seu nome completo"
-                />
-                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="email">E-mail *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className={errors.email ? 'border-destructive' : ''}
-                  placeholder="seu@email.com"
-                />
-                {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Celular *</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: formatPhone(e.target.value)})}
-                  className={errors.phone ? 'border-destructive' : ''}
-                  placeholder="(11)99999-9999"
-                  maxLength={14}
-                />
-                {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
-              </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="name">Nome Completo *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className={errors.name ? 'border-destructive' : ''}
+                placeholder="Digite seu nome completo"
+                disabled={isSubmitting}
+              />
+              {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
             </div>
-          )}
 
-          {/* Informações Financeiras */}
-          {currentStep === 'financial' && (
-            <div className="space-y-4 animate-fade-in">
-              <div>
-                <Label htmlFor="ownResources">Qual o valor de recurso próprio para o lance?</Label>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <span className="text-2xl font-bold text-primary">
-                      {formatCurrency(formData.ownResources)}
-                    </span>
-                  </div>
-                  <Slider
-                    value={[formData.ownResources]}
-                    onValueChange={(value) => setFormData({...formData, ownResources: value[0]})}
-                    min={50000}
-                    max={300000}
-                    step={50000}
-                    className="w-full"
+            <div>
+              <Label htmlFor="email">E-mail *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className={errors.email ? 'border-destructive' : ''}
+                placeholder="seu@email.com"
+                disabled={isSubmitting}
+              />
+              {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Celular *</Label>
+              <InputMask
+                mask="(99) 99999-9999"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                disabled={isSubmitting}
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    id="phone"
+                    type="tel"
+                    className={errors.phone ? 'border-destructive' : ''}
+                    placeholder="(11) 99999-9999"
                   />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>R$ 50.000</span>
-                    <span>R$ 300.000</span>
-                  </div>
-                </div>
-                {errors.ownResources && <p className="text-sm text-destructive mt-1">{errors.ownResources}</p>}
-              </div>
+                )}
+              </InputMask>
+              {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
             </div>
-          )}
 
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 'personal'}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Button>
-            
-            <Button
-              type="button"
-              onClick={handleNext}
-              className="flex items-center gap-2"
+              type="submit"
               variant="hero"
               size="lg"
+              className="w-full"
+              disabled={isSubmitting}
             >
-              {currentStep === 'financial' ? 'Iniciar Simulação' : 'Próximo'}
-              <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <>Processando...</>
+              ) : (
+                <>
+                  Ver Meus Resultados
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
-      {/* Trust Indicators */}
-      <div className="flex flex-col items-center gap-4 mt-8">
-        <p className="text-sm text-muted-foreground text-center">
-          🔒 Seus dados estão protegidos • ⚡ Simulação instantânea • ✅ Sem compromisso
+      {/* Privacy Notice */}
+      <div className="text-center mt-6">
+        <p className="text-sm text-muted-foreground">
+          🔒 Seus dados estão seguros. Não enviamos spam e você pode cancelar a qualquer momento.
         </p>
       </div>
     </div>

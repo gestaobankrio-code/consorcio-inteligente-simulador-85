@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RefreshCw, TrendingDown, Calculator, Phone, Share2, Settings } from 'lucide-react';
 import { LeadData, SimulationData, SimulationResult } from './ConsortiumSimulator';
 import { Link } from 'react-router-dom';
-import { useSimulatorConfig } from '@/hooks/useSimulatorConfig';
+import { useSettings } from '@/hooks/useSettings';
+import { useLeads } from '@/hooks/useLeads';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResultsChartProps {
   leadData: LeadData;
@@ -21,7 +23,9 @@ export const ResultsChart = ({
   onBackToSimulator, 
   onNewSimulation 
 }: ResultsChartProps) => {
-  const { rdStationConfig } = useSimulatorConfig();
+  const { rdStationConfig } = useSettings();
+  const { saveLeadInteraction } = useLeads();
+  const { toast } = useToast();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -36,10 +40,54 @@ export const ResultsChart = ({
     caminhao: 'Caminhão'
   };
 
-  const showSpecialistCTA = leadData.leadScore >= 3; // Lead scoring mínimo ajustado
+  const showSpecialistCTA = leadData.leadScore >= 5; // Lead scoring configurável
   
-  // Debug lead scoring
+  // Debug lead scoring (remover em produção)
   console.log('Lead Score:', leadData.leadScore, 'Show Specialist CTA:', showSpecialistCTA);
+
+  const handleWhatsAppClick = async () => {
+    try {
+      // Registrar clique no WhatsApp
+      if (leadData.leadId) {
+        await saveLeadInteraction(leadData.leadId, 'whatsapp_click');
+      }
+
+      // Criar mensagem detalhada
+      const categoryName = categoryNames[simulationData.category];
+      const message = `Olá! Acabei de fazer uma simulação de consórcio e gostaria de falar com um especialista.
+
+📊 *Dados da Simulação:*
+• Categoria: ${categoryName}
+• Valor da Carta: ${formatCurrency(simulationData.chartValue)}
+• Prazo de Aquisição: ${simulationData.timeToAcquire} meses
+• Recurso para Lance: ${formatCurrency(simulationData.ownResources)}
+• Valor da Parcela: ${formatCurrency(results.consortium.monthlyPayment)}
+
+💰 *Resultado:*
+• Economia Total: ${formatCurrency(results.savings)}
+• Percentual de Economia: ${results.savingsPercentage.toFixed(1)}%
+
+Gostaria de mais informações sobre como fazer parte de um consórcio e aproveitar essa economia!`;
+
+      // Abrir WhatsApp
+      const whatsappNumber = rdStationConfig.whatsappNumber || '5511999999999';
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast({
+        title: "Redirecionando para WhatsApp",
+        description: "Você será direcionado para conversar com nosso especialista.",
+      });
+
+    } catch (error) {
+      console.error('Erro ao processar clique no WhatsApp:', error);
+      toast({
+        title: "Erro",
+        description: "Houve um problema. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleShare = () => {
     const text = `🎯 Descobri uma economia incrível com consórcio!\n\n💰 Economia total: ${formatCurrency(results.savings)}\n📊 Isso representa ${results.savingsPercentage.toFixed(1)}% de economia!\n\n✅ Parcelas sem juros\n✅ Valores reduzidos\n\nSimule você também: [seu-link-aqui]`;
@@ -179,19 +227,30 @@ export const ResultsChart = ({
           </p>
           
           <div className="flex justify-center">
-            {showSpecialistCTA && (
+            {showSpecialistCTA ? (
               <Button
                 size="xl"
-                variant="specialist"
-                className="bg-white text-primary hover:bg-white/90 font-bold flex items-center gap-2"
-                onClick={() => {
-                  const message = `Olá! Fiz uma simulação de consórcio e posso economizar ${formatCurrency(results.savings)}. Gostaria de falar com um especialista!`;
-                  window.open(`https://wa.me/${rdStationConfig.whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
-                }}
+                variant="hero"
+                className="bg-white text-primary hover:bg-white/90 font-bold flex items-center gap-2 animate-pulse"
+                onClick={handleWhatsAppClick}
               >
                 <Phone className="w-5 h-5" />
-                Fale com um Especialista Agora!
+                💬 Fale com Especialista Agora!
               </Button>
+            ) : (
+              <div className="text-center">
+                <p className="text-white/80 mb-4">
+                  Para falar com um especialista, simule novamente com valores mais altos
+                </p>
+                <Button
+                  variant="outline"
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20"
+                  onClick={onBackToSimulator}
+                >
+                  <Calculator className="w-4 h-4 mr-2" />
+                  Ajustar Simulação
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>
