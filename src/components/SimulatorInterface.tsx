@@ -27,7 +27,6 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Car className="w-6 h-6" />,
       description: 'Carros, motos e veículos leves',
       gradient: 'from-blue-500 to-blue-600',
-      rules: 'Prazo: até 60 meses | Valor: R$ 30.000 a R$ 200.000',
       minValue: 30000,
       maxValue: 200000,
       maxMonths: 60,
@@ -40,7 +39,6 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Home className="w-6 h-6" />,
       description: 'Casas, apartamentos e terrenos',
       gradient: 'from-green-500 to-green-600',
-      rules: 'Prazo: até 200 meses | Valor: R$ 70.000 a R$ 1.000.000',
       minValue: 70000,
       maxValue: 1000000,
       maxMonths: 200,
@@ -53,7 +51,6 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Truck className="w-6 h-6" />,
       description: 'Caminhões e veículos pesados',
       gradient: 'from-orange-500 to-orange-600',
-      rules: 'Prazo: até 120 meses | Valor: R$ 200.000 a R$ 360.000',
       minValue: 200000,
       maxValue: 360000,
       maxMonths: 120,
@@ -126,7 +123,6 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
-                <p className="text-xs text-primary font-medium">{category.rules}</p>
                 
                 {simulationData.category === category.id && (
                   <div className="absolute top-2 right-2">
@@ -147,12 +143,6 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
               <Calculator className="w-5 h-5" />
               Personalize sua simulação
             </CardTitle>
-            {/* Exibir regras da categoria selecionada */}
-            <div className="bg-info/10 border border-info/20 rounded-lg p-3 mt-4">
-              <p className="text-sm font-medium text-info">
-                📋 Regras para {getCurrentCategory().name}: {getCurrentCategory().rules}
-              </p>
-            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
