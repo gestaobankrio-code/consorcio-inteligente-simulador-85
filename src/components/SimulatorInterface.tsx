@@ -27,7 +27,12 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Car className="w-6 h-6" />,
       description: 'Carros, motos e veículos leves',
       gradient: 'from-blue-500 to-blue-600',
-      rules: 'Prazo: até 60 meses | Valor: R$ 30.000 a R$ 200.000'
+      rules: 'Prazo: até 60 meses | Valor: R$ 30.000 a R$ 200.000',
+      minValue: 30000,
+      maxValue: 200000,
+      maxMonths: 60,
+      valueOptions: [30000, 50000, 75000, 100000, 150000, 200000],
+      monthOptions: [12, 24, 36, 48, 60]
     },
     {
       id: 'imovel',
@@ -35,7 +40,12 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Home className="w-6 h-6" />,
       description: 'Casas, apartamentos e terrenos',
       gradient: 'from-green-500 to-green-600',
-      rules: 'Prazo: até 200 meses | Valor: R$ 70.000 a R$ 1.000.000'
+      rules: 'Prazo: até 200 meses | Valor: R$ 70.000 a R$ 1.000.000',
+      minValue: 70000,
+      maxValue: 1000000,
+      maxMonths: 200,
+      valueOptions: [70000, 100000, 150000, 200000, 300000, 500000, 700000, 1000000],
+      monthOptions: [24, 36, 48, 60, 72, 84, 96, 120, 144, 168, 200]
     },
     {
       id: 'caminhao',
@@ -43,7 +53,12 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       icon: <Truck className="w-6 h-6" />,
       description: 'Caminhões e veículos pesados',
       gradient: 'from-orange-500 to-orange-600',
-      rules: 'Prazo: até 120 meses | Valor: R$ 200.000 a R$ 360.000'
+      rules: 'Prazo: até 120 meses | Valor: R$ 200.000 a R$ 360.000',
+      minValue: 200000,
+      maxValue: 360000,
+      maxMonths: 120,
+      valueOptions: [200000, 250000, 300000, 360000],
+      monthOptions: [36, 48, 60, 72, 84, 96, 108, 120]
     }
   ];
 
@@ -53,6 +68,11 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
+  };
+
+  // Função para obter a categoria atual
+  const getCurrentCategory = () => {
+    return categories.find(cat => cat.id === simulationData.category) || categories[0];
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -127,6 +147,12 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
               <Calculator className="w-5 h-5" />
               Personalize sua simulação
             </CardTitle>
+            {/* Exibir regras da categoria selecionada */}
+            <div className="bg-info/10 border border-info/20 rounded-lg p-3 mt-4">
+              <p className="text-sm font-medium text-info">
+                📋 Regras para {getCurrentCategory().name}: {getCurrentCategory().rules}
+              </p>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -140,15 +166,11 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="50000">R$ 50.000</SelectItem>
-                    <SelectItem value="75000">R$ 75.000</SelectItem>
-                    <SelectItem value="100000">R$ 100.000</SelectItem>
-                    <SelectItem value="150000">R$ 150.000</SelectItem>
-                    <SelectItem value="200000">R$ 200.000</SelectItem>
-                    <SelectItem value="250000">R$ 250.000</SelectItem>
-                    <SelectItem value="300000">R$ 300.000</SelectItem>
-                    <SelectItem value="400000">R$ 400.000</SelectItem>
-                    <SelectItem value="500000">R$ 500.000</SelectItem>
+                    {getCurrentCategory().valueOptions.map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
+                        {formatCurrency(value)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -163,12 +185,11 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="12">12 meses</SelectItem>
-                    <SelectItem value="24">24 meses</SelectItem>
-                    <SelectItem value="36">36 meses</SelectItem>
-                    <SelectItem value="48">48 meses</SelectItem>
-                    <SelectItem value="60">60 meses</SelectItem>
-                    <SelectItem value="72">72 meses</SelectItem>
+                    {getCurrentCategory().monthOptions.map((months) => (
+                      <SelectItem key={months} value={months.toString()}>
+                        {months} meses
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
