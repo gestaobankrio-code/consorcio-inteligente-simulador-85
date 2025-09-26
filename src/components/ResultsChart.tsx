@@ -231,7 +231,7 @@ Gostaria de mais informações sobre como fazer parte de um consórcio e aprovei
               <Button
                 size="xl"
                 variant="hero"
-                className="bg-white text-primary hover:bg-white/90 font-bold flex items-center gap-2 animate-pulse"
+                className="bg-primary text-white hover:bg-primary/90 font-bold flex items-center gap-2 animate-pulse"
                 onClick={handleWhatsAppClick}
               >
                 <Phone className="w-5 h-5" />

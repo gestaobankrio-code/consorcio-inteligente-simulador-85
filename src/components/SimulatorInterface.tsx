@@ -26,21 +26,24 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
       name: 'Automóvel',
       icon: <Car className="w-6 h-6" />,
       description: 'Carros, motos e veículos leves',
-      gradient: 'from-blue-500 to-blue-600'
+      gradient: 'from-blue-500 to-blue-600',
+      rules: 'Prazo: até 60 meses | Valor: R$ 30.000 a R$ 200.000'
     },
     {
       id: 'imovel',
       name: 'Imóvel',
       icon: <Home className="w-6 h-6" />,
       description: 'Casas, apartamentos e terrenos',
-      gradient: 'from-green-500 to-green-600'
+      gradient: 'from-green-500 to-green-600',
+      rules: 'Prazo: até 200 meses | Valor: R$ 70.000 a R$ 1.000.000'
     },
     {
       id: 'caminhao',
       name: 'Caminhão',
       icon: <Truck className="w-6 h-6" />,
       description: 'Caminhões e veículos pesados',
-      gradient: 'from-orange-500 to-orange-600'
+      gradient: 'from-orange-500 to-orange-600',
+      rules: 'Prazo: até 120 meses | Valor: R$ 200.000 a R$ 360.000'
     }
   ];
 
@@ -102,7 +105,8 @@ export const SimulatorInterface = ({ onSubmit }: SimulatorInterfaceProps) => {
                   {category.icon}
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
-                <p className="text-sm text-muted-foreground">{category.description}</p>
+                <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
+                <p className="text-xs text-primary font-medium">{category.rules}</p>
                 
                 {simulationData.category === category.id && (
                   <div className="absolute top-2 right-2">
