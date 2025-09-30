@@ -52,16 +52,21 @@ export const ResultsChart = ({
         await saveLeadInteraction(leadData.leadId, 'whatsapp_click');
       }
 
-      // Criar mensagem detalhada
+      // Criar mensagem detalhada incluindo dados do lead
       const categoryName = categoryNames[simulationData.category];
       const message = `Olá! Acabei de fazer uma simulação de consórcio e gostaria de falar com um especialista.
+
+👤 *Meus Dados:*
+• Nome: ${leadData.name}
+• E-mail: ${leadData.email}
+• Telefone: ${leadData.phone}
 
 📊 *Dados da Simulação:*
 • Categoria: ${categoryName}
 • Valor da Carta: ${formatCurrency(simulationData.chartValue)}
 • Prazo de Aquisição: ${simulationData.timeToAcquire} meses
 • Recurso para Lance: ${formatCurrency(simulationData.ownResources)}
-• Valor da Parcela: ${formatCurrency(results.consortium.monthlyPayment)}
+• Valor da Parcela: a partir de ${formatCurrency(results.consortium.monthlyPayment)}
 
 💰 *Resultado:*
 • Economia Total: ${formatCurrency(results.savings)}
@@ -168,7 +173,10 @@ Gostaria de mais informações sobre como fazer parte de um consórcio e aprovei
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span>Parcela Mensal:</span>
-                <span className="font-bold text-lg">{formatCurrency(results.consortium.monthlyPayment)}</span>
+                <span className="font-bold text-lg">
+                  <span className="text-sm text-muted-foreground">a partir de </span>
+                  {formatCurrency(results.consortium.monthlyPayment)}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span>Valor Total:</span>

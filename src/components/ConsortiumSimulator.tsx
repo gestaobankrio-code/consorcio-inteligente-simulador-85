@@ -49,7 +49,7 @@ export const ConsortiumSimulator = () => {
   const calculateResults = (data: SimulationData): SimulationResult => {
     const { category, chartValue, ownResources, timeToAcquire } = data;
     
-    // Taxa de administração do consórcio (23% - não mostrar)
+    // Taxa de administração do consórcio (23% dividido pelo prazo)
     const adminFeeRate = 0.23;
     const netValue = chartValue - ownResources;
     
@@ -58,47 +58,84 @@ export const ConsortiumSimulator = () => {
     const consortiumTotal = chartValue + adminFee;
     const consortiumMonthly = consortiumTotal / timeToAcquire;
     
-    // Definir taxas por categoria de financiamento
-    let monthlyRate, yearlyRate, iofRate, insuranceRate, fees;
+    // Definir taxas por categoria de financiamento conforme solicitado
+    let monthlyRate, yearlyRate, iofDaily, iofFixed, trRate, insuranceRate, fees;
     
     switch (category) {
-      case 'imovel':
-        yearlyRate = 0.145; // 14.5% a.a. (média entre 11-13.5% + TR)
-        monthlyRate = Math.pow(1 + yearlyRate, 1/12) - 1;
-        iofRate = 0; // Isento para imóveis
-        insuranceRate = 0.02 / 12; // MIP + DFI (~2% a.a.)
-        fees = 3000; // Avaliação + admin
+      case 'auto':
+        // 🚗 Automóveis (CDC pessoa física)
+        // IOF: 0,0082% ao dia + 0,38% fixo
+        iofDaily = 0.000082;
+        iofFixed = 0.0038;
+        // Juros do financiamento: ~2,25% ao mês (~28% a.a.)
+        monthlyRate = 0.0225;
+        // Seguros atrelados (proteção financeira, prestamista) - estimativa
+        insuranceRate = 0.005; // ~0,5% a.m.
+        // Tarifa de cadastro/abertura
+        fees = 700; // Média entre R$500-900
         break;
       
-      case 'auto':
-        monthlyRate = 0.016; // 1.6% a.m. (média entre 1.3-1.9%)
-        iofRate = 0.0038 + (0.0082 / 30); // IOF + taxa diária
-        insuranceRate = 0.025; // Prestamista + seguro do carro (~2.5% a.m.)
-        fees = 1500; // Cadastro + gravame
+      case 'imovel':
+        // 🏠 Imóveis (financiamento habitacional / SBPE)
+        // IOF: Isento em crédito imobiliário residencial
+        iofDaily = 0;
+        iofFixed = 0;
+        // Juros: ~11,29% a 13,50% a.a. + TR (usando média de 12,4% a.a.)
+        yearlyRate = 0.124;
+        monthlyRate = Math.pow(1 + yearlyRate, 1/12) - 1;
+        // TR (Taxa Referencial): ~0,05% a 0,10% a.m. (usando média)
+        trRate = 0.00075; // ~0,075% a.m.
+        // Seguros obrigatórios: MIP + DFI (~0,02% a 0,04% do saldo ao mês)
+        insuranceRate = 0.0003; // ~0,03% do saldo
+        // Taxa de avaliação + tarifa administrativa
+        fees = 4000; // Média entre R$3.000-5.000 + tarifa
         break;
       
       case 'caminhao':
-        monthlyRate = 0.01075; // 1.075% a.m. (média entre 0.95-1.2%)
-        iofRate = 0.0038 + (0.0082 / 30); // IOF + taxa diária
-        insuranceRate = 0.02; // Prestamista + seguro do caminhão (~2% a.m.)
-        fees = 2000; // Cadastro + cartório
+        // 🚛 Caminhões (similar a automóveis, mas com taxas ajustadas)
+        iofDaily = 0.000082;
+        iofFixed = 0.0038;
+        // Juros similares aos automóveis, mas um pouco menores
+        monthlyRate = 0.02; // ~2% a.m.
+        // Seguros
+        insuranceRate = 0.004; // ~0,4% a.m.
+        // Tarifa de cadastro
+        fees = 1000;
         break;
       
       default:
-        monthlyRate = 0.016;
-        iofRate = 0.0038;
-        insuranceRate = 0.025;
-        fees = 1500;
+        iofDaily = 0.000082;
+        iofFixed = 0.0038;
+        monthlyRate = 0.0225;
+        insuranceRate = 0.005;
+        fees = 700;
     }
     
-    const totalMonthlyRate = monthlyRate + iofRate + insuranceRate;
-    const financingBase = netValue + fees;
+    // Calcular IOF total para automóveis e caminhões
+    let iofTotal = 0;
+    if (category === 'auto' || category === 'caminhao') {
+      // IOF diário: 0,0082% ao dia sobre o valor financiado durante o prazo
+      const iofDailyAmount = netValue * iofDaily * (timeToAcquire * 30); // aproximação em dias
+      // IOF fixo: 0,38% sobre o valor financiado
+      const iofFixedAmount = netValue * iofFixed;
+      iofTotal = iofDailyAmount + iofFixedAmount;
+    }
     
-    // Fórmula de financiamento PRICE
-    const financingMonthly = financingBase * (totalMonthlyRate * Math.pow(1 + totalMonthlyRate, timeToAcquire)) / 
-                            (Math.pow(1 + totalMonthlyRate, timeToAcquire) - 1);
+    // Para imóveis, adicionar TR ao cálculo
+    if (category === 'imovel') {
+      monthlyRate = monthlyRate + trRate;
+    }
+    
+    // Base de financiamento inclui o valor líquido + taxas + IOF
+    const financingBase = netValue + fees + iofTotal;
+    
+    // Fórmula de financiamento PRICE (Sistema de Amortização Price)
+    // Inclui juros + seguros
+    const effectiveMonthlyRate = monthlyRate + insuranceRate;
+    const financingMonthly = financingBase * (effectiveMonthlyRate * Math.pow(1 + effectiveMonthlyRate, timeToAcquire)) / 
+                            (Math.pow(1 + effectiveMonthlyRate, timeToAcquire) - 1);
     const financingTotal = financingMonthly * timeToAcquire;
-    const totalInterest = financingTotal - financingBase;
+    const totalInterest = financingTotal - netValue - fees - iofTotal;
     
     // Economia
     const savings = financingTotal - consortiumTotal;
