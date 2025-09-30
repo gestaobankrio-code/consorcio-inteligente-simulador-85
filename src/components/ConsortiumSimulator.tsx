@@ -92,15 +92,18 @@ export const ConsortiumSimulator = () => {
         break;
       
       case 'caminhao':
-        // 🚛 Caminhões (similar a automóveis, mas com taxas ajustadas)
-        iofDaily = 0.000082;
-        iofFixed = 0.0038;
-        // Juros similares aos automóveis, mas um pouco menores
-        monthlyRate = 0.02; // ~2% a.m.
-        // Seguros
-        insuranceRate = 0.004; // ~0,4% a.m.
-        // Tarifa de cadastro
-        fees = 1000;
+        // 🚛 Caminhões - Financiamento BNDES/Operações de Investimento Produtivo
+        // IOF: Geralmente isento em operações de investimento produtivo
+        iofDaily = 0;
+        iofFixed = 0;
+        // TLP ou TJLP: Taxa base do BNDES (~8,96% a.a. TJLP) + Spread (1,5% a 4% - usando média de 2,75%)
+        // CET final: ~11% a 15% a.a. (usando 13% como média)
+        yearlyRate = 0.13; // 13% a.a.
+        monthlyRate = Math.pow(1 + yearlyRate, 1/12) - 1;
+        // Seguros obrigatórios (prestamista ou do bem)
+        insuranceRate = 0.003; // ~0,3% a.m.
+        // Tarifa de estruturação/administração: ~1% sobre o valor
+        fees = netValue * 0.01; // 1% do valor financiado
         break;
       
       default:

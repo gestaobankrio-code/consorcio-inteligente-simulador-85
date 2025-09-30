@@ -121,17 +121,20 @@ Gostaria de mais informações sobre como fazer parte de um consórcio e aprovei
         </h1>
         
         {/* Destaque da Economia */}
-        <div className="bg-gradient-to-r from-success/20 to-primary/20 rounded-2xl p-8 mb-6 animate-bounce-in">
+        <div className="bg-gradient-to-r from-success/20 to-primary/20 rounded-2xl p-8 mb-6 animate-bounce-in border-2 border-success/30">
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-success mb-2">
-              Você pode economizar
+              💰 Você pode economizar
             </h2>
-            <div className="text-4xl md:text-6xl font-bold gradient-text mb-2">
+            <div className="text-5xl md:text-7xl font-extrabold gradient-text mb-3">
               {formatCurrency(results.savings)}
             </div>
-            <p className="text-xl text-muted-foreground">
-              Isso representa <strong className="text-success">{results.savingsPercentage.toFixed(1)}%</strong> de economia!
+            <p className="text-xl text-muted-foreground mb-2">
+              Isso representa <strong className="text-success text-2xl">{results.savingsPercentage.toFixed(1)}%</strong> de economia!
             </p>
+            <div className="inline-flex items-center gap-2 bg-success/20 text-success px-6 py-3 rounded-full mt-4">
+              <span className="text-lg font-bold">✅ Consórcio é {results.savingsPercentage.toFixed(0)}% mais vantajoso</span>
+            </div>
           </div>
         </div>
       </div>
@@ -163,29 +166,42 @@ Gostaria de mais informações sobre como fazer parte de um consórcio e aprovei
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         
         {/* Consórcio */}
-        <Card className="card-elevated animate-slide-up border-success/20">
-          <CardHeader className="bg-success/5">
-            <CardTitle className="text-success flex items-center gap-2">
-              ✅ Consórcio (Recomendado)
+        <Card className="card-elevated animate-slide-up border-2 border-success/40 shadow-lg shadow-success/20">
+          <CardHeader className="bg-gradient-to-br from-success/10 to-success/5">
+            <CardTitle className="text-success flex items-center gap-2 text-xl">
+              ✅ Consórcio (RECOMENDADO)
             </CardTitle>
+            <p className="text-sm text-success/80 font-medium mt-2">
+              🎯 Opção mais econômica e inteligente
+            </p>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span>Parcela Mensal:</span>
-                <span className="font-bold text-lg">
-                  <span className="text-sm text-muted-foreground">a partir de </span>
-                  {formatCurrency(results.consortium.monthlyPayment)}
-                </span>
+              <div className="flex justify-between items-center p-3 bg-success/5 rounded-lg">
+                <span className="font-medium">Parcela Mensal:</span>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">a partir de</div>
+                  <span className="font-bold text-xl text-success">{formatCurrency(results.consortium.monthlyPayment)}</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span>Valor Total:</span>
-                <span className="font-bold text-lg">{formatCurrency(results.consortium.totalAmount)}</span>
+              <div className="flex justify-between items-center p-3 bg-success/5 rounded-lg">
+                <span className="font-medium">Valor Total:</span>
+                <span className="font-bold text-xl text-success">{formatCurrency(results.consortium.totalAmount)}</span>
               </div>
-              <div className="pt-4 border-t">
-                <div className="flex items-center gap-2 text-success text-sm">
-                  <span>✓ Sem juros</span>
-                  <span>✓ Parcelas reduzidas</span>
+              <div className="pt-4 border-t border-success/20">
+                <div className="space-y-2 text-success text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">✓</span>
+                    <span className="font-medium">Sem juros abusivos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">✓</span>
+                    <span className="font-medium">Parcelas muito menores</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">✓</span>
+                    <span className="font-medium">Economia garantida</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -193,29 +209,34 @@ Gostaria de mais informações sobre como fazer parte de um consórcio e aprovei
         </Card>
 
         {/* Financiamento */}
-        <Card className="card-elevated animate-slide-up border-destructive/20">
-          <CardHeader className="bg-destructive/5">
-            <CardTitle className="text-destructive flex items-center gap-2">
+        <Card className="card-elevated animate-slide-up border-2 border-destructive/40 shadow-lg shadow-destructive/10">
+          <CardHeader className="bg-gradient-to-br from-destructive/10 to-destructive/5">
+            <CardTitle className="text-destructive flex items-center gap-2 text-xl">
               ❌ Financiamento Tradicional
             </CardTitle>
+            <p className="text-sm text-destructive/80 font-medium mt-2">
+              ⚠️ Opção mais cara e com juros altos
+            </p>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span>Parcela Mensal:</span>
-                <span className="font-bold text-lg">{formatCurrency(results.financing.monthlyPayment)}</span>
+              <div className="flex justify-between items-center p-3 bg-destructive/5 rounded-lg">
+                <span className="font-medium">Parcela Mensal:</span>
+                <span className="font-bold text-xl text-destructive">{formatCurrency(results.financing.monthlyPayment)}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span>Valor Total:</span>
-                <span className="font-bold text-lg">{formatCurrency(results.financing.totalAmount)}</span>
+              <div className="flex justify-between items-center p-3 bg-destructive/5 rounded-lg">
+                <span className="font-medium">Valor Total:</span>
+                <span className="font-bold text-xl text-destructive">{formatCurrency(results.financing.totalAmount)}</span>
               </div>
-              <div className="flex justify-between items-center text-destructive">
-                <span>Total de Juros:</span>
-                <span className="font-bold">{formatCurrency(results.financing.totalInterest)}</span>
+              <div className="flex justify-between items-center p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                <span className="font-medium">Total de Juros:</span>
+                <span className="font-bold text-lg text-destructive">{formatCurrency(results.financing.totalInterest)}</span>
               </div>
-              <div className="pt-4 border-t">
-                <div className="text-destructive text-sm">
-                  ❌ Inclui IOF, juros, seguro e tarifas
+              <div className="pt-4 border-t border-destructive/20">
+                <div className="text-destructive text-sm space-y-1">
+                  <div className="font-medium">❌ Inclui IOF, juros altos e tarifas</div>
+                  <div className="font-medium">❌ Seguros obrigatórios caros</div>
+                  <div className="font-medium">❌ Custo efetivo total elevado</div>
                 </div>
               </div>
             </div>
