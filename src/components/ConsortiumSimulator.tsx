@@ -49,8 +49,23 @@ export const ConsortiumSimulator = () => {
   const calculateResults = (data: SimulationData): SimulationResult => {
     const { category, chartValue, ownResources, timeToAcquire } = data;
     
-    // Taxa de administração do consórcio (23% dividido pelo prazo)
-    const adminFeeRate = 0.23;
+    // Taxa de administração do consórcio varia por categoria (mais baixa que financiamento)
+    let adminFeeRate: number;
+    
+    switch (category) {
+      case 'auto':
+        adminFeeRate = 0.15; // 15% para automóveis
+        break;
+      case 'imovel':
+        adminFeeRate = 0.18; // 18% para imóveis (prazo mais longo)
+        break;
+      case 'caminhao':
+        adminFeeRate = 0.16; // 16% para caminhões
+        break;
+      default:
+        adminFeeRate = 0.15;
+    }
+    
     const netValue = chartValue - ownResources;
     
     // Cálculos do Consórcio - apenas taxa de administração
