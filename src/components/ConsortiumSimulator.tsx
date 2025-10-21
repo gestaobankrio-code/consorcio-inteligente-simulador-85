@@ -50,9 +50,9 @@ export const ConsortiumSimulator = () => {
     const { category, chartValue, ownResources, timeToAcquire } = data;
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // CONSÓRCIO: Taxa de administração única de 23% (sem juros, IOF ou seguros)
+    // CONSÓRCIO: Taxa de administração reduzida (sem juros, IOF ou seguros)
     // ═══════════════════════════════════════════════════════════════════════════
-    const adminFeeRate = 0.23; // 23% para todas as categorias
+    const adminFeeRate = 0.15; // 15% para todas as categorias
     const adminFee = chartValue * adminFeeRate;
     const consortiumTotal = chartValue + adminFee;
     const consortiumMonthly = consortiumTotal / timeToAcquire;
@@ -73,8 +73,8 @@ export const ConsortiumSimulator = () => {
         // IOF: 0,38% + 0,0082% ao dia (≈1,5% total/ano)
         iofFixed = 0.0038; // 0,38%
         iofDaily = 0.000082; // 0,0082% ao dia
-        // Juros médios: 1,6% a 2,2% ao mês (usando 1,9% como média)
-        monthlyRate = 0.019; // 1,9% ao mês
+        // Juros médios: 1,6% a 2,2% ao mês (usando 2,2% para pior cenário)
+        monthlyRate = 0.022; // 2,2% ao mês
         // Tarifas bancárias: até 3%
         bankFees = chartValue * 0.03; // 3% do valor
         // Sem seguros separados (já incluídos nas tarifas)
@@ -86,13 +86,13 @@ export const ConsortiumSimulator = () => {
         // IOF: isento (residencial PF)
         iofFixed = 0;
         iofDaily = 0;
-        // Juros médios: 9% a 13% ao ano (usando 11% a.a.)
-        yearlyRate = 0.11; // 11% ao ano
+        // Juros médios: 9% a 13% ao ano (usando 13% para pior cenário)
+        yearlyRate = 0.13; // 13% ao ano
         monthlyRate = Math.pow(1 + yearlyRate, 1/12) - 1; // Conversão para mensal
-        // Seguros obrigatórios (MIP + DFI): 1,5% a 2% ao ano (usando 1,75%)
-        yearlyInsurance = 0.0175; // 1,75% ao ano
-        // Tarifas administrativas: 1% a 2% (usando 1,5%)
-        bankFees = chartValue * 0.015; // 1,5% do valor
+        // Seguros obrigatórios (MIP + DFI): 1,5% a 2% ao ano (usando 2%)
+        yearlyInsurance = 0.02; // 2% ao ano
+        // Tarifas administrativas: 1% a 2% (usando 2%)
+        bankFees = chartValue * 0.02; // 2% do valor
         break;
       
       case 'caminhao':
@@ -100,8 +100,8 @@ export const ConsortiumSimulator = () => {
         // IOF: 0,38% + 0,0082% ao dia (≈1,5% total/ano)
         iofFixed = 0.0038; // 0,38%
         iofDaily = 0.000082; // 0,0082% ao dia
-        // Juros médios: 1,8% a 2,4% ao mês (usando 2,1% como média)
-        monthlyRate = 0.021; // 2,1% ao mês
+        // Juros médios: 1,8% a 2,4% ao mês (usando 2,4% para pior cenário)
+        monthlyRate = 0.024; // 2,4% ao mês
         // Tarifas e seguro obrigatório: até 4%
         bankFees = chartValue * 0.04; // 4% do valor
         // Seguros já incluídos nas tarifas
