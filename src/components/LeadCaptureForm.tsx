@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, UserPlus, ShieldCheck } from 'lucide-react';
 import { LeadData, SimulationData, SimulationResult } from './ConsortiumSimulator';
 import { useLeads } from '@/hooks/useLeads';
-import { useSettings } from '@/hooks/useSettings';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import InputMask from 'react-input-mask';
 
 interface LeadCaptureFormProps {
@@ -18,7 +18,6 @@ interface LeadCaptureFormProps {
 
 export const LeadCaptureForm = ({ onSubmit, simulationData, results }: LeadCaptureFormProps) => {
   const { saveLead } = useLeads();
-  const { leadScoring } = useSettings();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -42,22 +41,6 @@ export const LeadCaptureForm = ({ onSubmit, simulationData, results }: LeadCaptu
     return Object.keys(newErrors).length === 0;
   };
 
-  const calculateLeadScore = () => {
-    let score = 0;
-    
-    if (simulationData.chartValue >= leadScoring.chartValue.min) score += leadScoring.chartValue.high;
-    else if (simulationData.chartValue >= leadScoring.chartValue.mid) score += leadScoring.chartValue.medium;
-    else if (simulationData.chartValue >= leadScoring.chartValue.low) score += leadScoring.chartValue.low_score;
-    
-    const resourcesPercentage = (simulationData.ownResources / simulationData.chartValue) * 100;
-    if (resourcesPercentage >= leadScoring.resources.high) score += leadScoring.resources.high_score;
-    else if (resourcesPercentage >= leadScoring.resources.medium) score += leadScoring.resources.medium_score;
-    
-    if (simulationData.timeToAcquire <= leadScoring.timeToAcquire.fast) score += leadScoring.timeToAcquire.fast_score;
-    else if (simulationData.timeToAcquire <= leadScoring.timeToAcquire.medium) score += leadScoring.timeToAcquire.medium_score;
-    
-    return score;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +50,32 @@ export const LeadCaptureForm = ({ onSubmit, simulationData, results }: LeadCaptu
     setIsSubmitting(true);
 
     try {
-      const leadScore = calculateLeadScore();
+      // Calculate lead score server-side via Edge Function
+      const { data: scoreData, error: scoreError } = await supabase.functions.invoke(
+        'calculate-lead-score',
+        {
+          body: {
+            chartValue: simulationData.chartValue,
+            ownResources: simulationData.ownResources,
+            timeToAcquire: simulationData.timeToAcquire
+          }
+        }
+      );
+
+      if (scoreError) {
+        console.error('Error calculating lead score:', scoreError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível calcular a pontuação. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const leadScore = scoreData?.score || 0;
       
-      // Save lead to Supabase
-      const leadData = await saveLead({
+      // Save lead to database (new secure leads table)
+      const savedLead = await saveLead({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -84,26 +89,55 @@ export const LeadCaptureForm = ({ onSubmit, simulationData, results }: LeadCaptu
         savings_percentage: results.savingsPercentage
       });
 
-      if (leadData) {
-        const leadDataWithScore: LeadData = {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          chartValue: simulationData.chartValue,
-          timeToAcquire: simulationData.timeToAcquire,
-          ownResources: simulationData.ownResources,
-          leadScore
-        };
-
-        onSubmit({ ...leadDataWithScore, leadId: leadData.id });
-        
+      if (!savedLead) {
         toast({
-          title: "Dados salvos com sucesso!",
-          description: "Agora você verá seus resultados detalhados.",
+          title: "Erro",
+          description: "Não foi possível salvar seus dados. Tente novamente.",
+          variant: "destructive"
         });
-      } else {
-        throw new Error('Erro ao salvar dados');
+        return;
       }
+
+      // Send to RD Station via secure Edge Function
+      const { error: rdError } = await supabase.functions.invoke(
+        'send-to-rdstation',
+        {
+          body: {
+            leadData: {
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              category: simulationData.category,
+              chartValue: simulationData.chartValue,
+              ownResources: simulationData.ownResources,
+              timeToAcquire: simulationData.timeToAcquire,
+              leadScore
+            }
+          }
+        }
+      );
+
+      if (rdError) {
+        console.error('Error sending to RD Station:', rdError);
+        // Don't block user flow, just log the error
+      }
+
+      const leadDataWithScore: LeadData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        chartValue: simulationData.chartValue,
+        timeToAcquire: simulationData.timeToAcquire,
+        ownResources: simulationData.ownResources,
+        leadScore
+      };
+
+      onSubmit({ ...leadDataWithScore, leadId: savedLead.id });
+      
+      toast({
+        title: "Dados salvos com sucesso!",
+        description: "Agora você verá seus resultados detalhados.",
+      });
     } catch (error) {
       toast({
         title: "Erro ao processar dados",

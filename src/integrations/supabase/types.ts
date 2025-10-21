@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      lead_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          lead_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          lead_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_interactions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          category: string
+          chart_value: number
+          created_at: string
+          email: string
+          id: string
+          lead_score: number | null
+          name: string
+          own_resources: number | null
+          phone: string
+          time_to_acquire: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          chart_value: number
+          created_at?: string
+          email: string
+          id?: string
+          lead_score?: number | null
+          name: string
+          own_resources?: number | null
+          phone: string
+          time_to_acquire: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          chart_value?: number
+          created_at?: string
+          email?: string
+          id?: string
+          lead_score?: number | null
+          name?: string
+          own_resources?: number | null
+          phone?: string
+          time_to_acquire?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settings: {
         Row: {
           created_at: string
@@ -38,15 +109,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -173,6 +268,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

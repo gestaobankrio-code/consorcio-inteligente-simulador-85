@@ -41,9 +41,6 @@ export const ResultsChart = ({
   };
 
   const showSpecialistCTA = leadData.leadScore >= 5; // Lead scoring configurável
-  
-  // Debug lead scoring (remover em produção)
-  console.log('Lead Score:', leadData.leadScore, 'Show Specialist CTA:', showSpecialistCTA);
 
   const handleWhatsAppClick = async () => {
     try {

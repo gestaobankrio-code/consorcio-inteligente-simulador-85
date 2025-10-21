@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Lead {
-  id: string;
+  id?: string;
   name: string;
   email: string;
   phone: string;
@@ -14,71 +14,78 @@ export interface Lead {
   monthly_payment: number;
   total_savings: number;
   savings_percentage: number;
-  created_at: string;
+  created_at?: string;
 }
 
 export interface LeadInteraction {
   lead_id: string;
   interaction_type: 'whatsapp_click' | 'form_submission';
-  created_at: string;
+  created_at?: string;
 }
 
 export const useLeads = () => {
   const [loading, setLoading] = useState(false);
 
-  const saveLead = async (leadData: Omit<Lead, 'id' | 'created_at'>) => {
+  const saveLead = async (leadData: Omit<Lead, 'id' | 'created_at'>): Promise<Lead | null> => {
     try {
       setLoading(true);
       
-      const leadId = crypto.randomUUID();
-      const timestamp = new Date().toISOString();
-      
-      const lead: Lead = {
-        id: leadId,
-        ...leadData,
-        created_at: timestamp
-      };
-
-      // Save lead data using settings table
-      const { error } = await supabase
-        .from('settings')
+      // Insert into the new secure leads table
+      const { data, error } = await supabase
+        .from('leads')
         .insert({
-          key: `lead_${leadId}`,
-          value: lead as any
-        });
+          name: leadData.name,
+          email: leadData.email,
+          phone: leadData.phone,
+          category: leadData.category,
+          chart_value: leadData.chart_value,
+          time_to_acquire: leadData.time_to_acquire,
+          own_resources: leadData.own_resources,
+          lead_score: leadData.lead_score
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
-      return lead;
+      if (error) {
+        console.error('Error saving lead:', error);
+        return null;
+      }
+
+      return {
+        ...data,
+        monthly_payment: leadData.monthly_payment,
+        total_savings: leadData.total_savings,
+        savings_percentage: leadData.savings_percentage
+      } as Lead;
     } catch (error) {
-      console.error('Error saving lead:', error);
+      console.error('Error in saveLead:', error);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const saveLeadInteraction = async (leadId: string, interactionType: LeadInteraction['interaction_type']) => {
+  const saveLeadInteraction = async (
+    leadId: string,
+    interactionType: LeadInteraction['interaction_type']
+  ): Promise<boolean> => {
     try {
-      const interaction: LeadInteraction = {
-        lead_id: leadId,
-        interaction_type: interactionType,
-        created_at: new Date().toISOString()
-      };
-
-      const interactionId = crypto.randomUUID();
-
-      // Save interaction using settings table
+      // Insert into the new secure lead_interactions table
       const { error } = await supabase
-        .from('settings')
+        .from('lead_interactions')
         .insert({
-          key: `interaction_${interactionId}`,
-          value: interaction as any
+          lead_id: leadId,
+          interaction_type: interactionType
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving lead interaction:', error);
+        return false;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error saving lead interaction:', error);
+      console.error('Error in saveLeadInteraction:', error);
       return false;
     }
   };
