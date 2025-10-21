@@ -30,8 +30,11 @@ export const useLeads = () => {
     try {
       setLoading(true);
 
-      // Use Edge Function with service role to avoid RLS issues on public form
-      const { data, error } = await supabase.functions.invoke('submit-lead', {
+      // Clamp values to satisfy DB constraints
+      const safeTime = Math.max(6, Math.min(240, leadData.time_to_acquire));
+
+      // 1) Try Edge Function (service role, most reliable)
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('submit-lead', {
         body: {
           lead: {
             name: leadData.name,
@@ -39,25 +42,49 @@ export const useLeads = () => {
             phone: leadData.phone,
             category: leadData.category,
             chart_value: leadData.chart_value,
-            time_to_acquire: leadData.time_to_acquire,
+            time_to_acquire: safeTime,
             own_resources: leadData.own_resources,
             lead_score: leadData.lead_score
           }
         }
       });
 
-      if (error || !data?.lead) {
-        console.error('Error saving lead:', error);
+      let saved: any = fnData?.lead;
+
+      // 2) Fallback: direct insert (RLS allows INSERT)
+      if (!saved) {
+        const { data: insertData, error: insertError } = await supabase
+          .from('leads')
+          .insert({
+            name: leadData.name,
+            email: leadData.email,
+            phone: leadData.phone,
+            category: leadData.category,
+            chart_value: leadData.chart_value,
+            time_to_acquire: safeTime,
+            own_resources: leadData.own_resources,
+            lead_score: leadData.lead_score
+          })
+          .select()
+          .maybeSingle();
+
+        if (insertError) {
+          console.error('Direct insert error:', insertError);
+        }
+        saved = insertData;
+      }
+
+      if (!saved) {
+        console.error('Error saving lead: no data returned');
         return null;
       }
 
-      const saved = data.lead as Lead;
       return {
         ...saved,
         monthly_payment: leadData.monthly_payment,
         total_savings: leadData.total_savings,
         savings_percentage: leadData.savings_percentage
-      };
+      } as Lead;
     } catch (error) {
       console.error('Error in saveLead:', error);
       return null;
