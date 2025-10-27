@@ -84,14 +84,12 @@ export const useSettings = () => {
     try {
       setLoading(true);
       
-      const { error } = await supabase
-        .from('settings')
-        .upsert({
+      const { error } = await supabase.functions.invoke('save-settings', {
+        body: {
           key: 'rdstation_config',
-          value: config as unknown as any
-        }, {
-          onConflict: 'key'
-        });
+          value: config
+        }
+      });
 
       if (error) throw error;
       
@@ -110,14 +108,12 @@ export const useSettings = () => {
     try {
       setLoading(true);
       
-      const { error } = await supabase
-        .from('settings')
-        .upsert({
+      const { error } = await supabase.functions.invoke('save-settings', {
+        body: {
           key: 'lead_scoring',
-          value: scoring as unknown as any
-        }, {
-          onConflict: 'key'
-        });
+          value: scoring
+        }
+      });
 
       if (error) throw error;
       
